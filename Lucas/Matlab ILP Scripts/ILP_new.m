@@ -27,7 +27,7 @@ end
 A_82 = A;
 
 %% Generate a smaller resolving subset
-n = 100;
+n = 2000;
 sizes = zeros(1,n);
 sets = cell(1,n);
 for j = 1:n

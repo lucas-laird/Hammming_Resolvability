@@ -27,17 +27,17 @@ end
 A_82 = A;
 tic
 is_resolving = false;
-set = cell(77,1);
+set = cell(78,1);
 counter = 0;
 while ~is_resolving
     counter = counter+1;
     fprintf('Set %i\n',counter)
-    inds = randperm(82,77);
+    inds = randperm(82,78);
     A = A_82(inds,:);
     [is_resolving,X] = ILP_resolve(k,a,A);
 end
 toc
 fprintf('Finished')
-for i = 1:77
+for i = 1:78
     set{i} = str{inds(i)};
 end

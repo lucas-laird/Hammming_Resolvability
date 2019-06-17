@@ -43,33 +43,35 @@ function [resolving,X] = ILP_resolve(k,a,A)
         resolving = true;
     else
         resolving = false;
-        fprintf('numerical errors')
+        if norm(x) <= 1e-8
+            fprintf('Numerical Errors\n');
+        end
     end
 
     % If we claimed to be resolving, do a final check
-    if resolving
-        %disp('Feasiblity problem suggests this is a resolving set; running slower ILP to double-check');
-        if d > 16
-            % Draw a new random variable
-            c = randn(1,d);
-        end
-        %tic
-        cvx_begin quiet
-            cvx_solver gurobi % handles integer constraints
-            variable x(d) integer
-            minimize c*x
-            subject to
-                abs(x) <= 1 % so {-1,0,1} range
-                sum( mat(x) ) == 0 % Want blocks to sum to 0
-                sum( mat(abs(x) ) ) <= 2
-                A*x == 0
-        cvx_end
-        %toc
-        if ~all( x== 0 )
-            %disp('Slower ILP found a non-zero solution, so this is actually not resolving');
-            resolving = false;
-        end
-    end
+%     if resolving
+%         %disp('Feasiblity problem suggests this is a resolving set; running slower ILP to double-check');
+%         if d > 16
+%             % Draw a new random variable
+%             c = randn(1,d);
+%         end
+%         %tic
+%         cvx_begin quiet
+%             cvx_solver gurobi % handles integer constraints
+%             variable x(d) integer
+%             minimize c*x
+%             subject to
+%                 abs(x) <= 1 % so {-1,0,1} range
+%                 sum( mat(x) ) == 0 % Want blocks to sum to 0
+%                 sum( mat(abs(x) ) ) <= 2
+%                 A*x == 0
+%         cvx_end
+%         %toc
+%         if ~all( x== 0 )
+%             fprintf('Slower ILP found a non-zero solution, so this is actually not resolving');
+%             resolving = false;
+%         end
+%     end
 
 
     if ~resolving

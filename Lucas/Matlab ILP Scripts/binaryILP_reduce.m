@@ -30,7 +30,7 @@ A_82 = A;
 top = 82;
 bot = 1;
 n = 800;
-while top-bot > 0
+while top-bot > 1
     diff = top-bot;
     curr_size = bot+ceil(diff/2);
     fprintf('top = %i, bot = %i, curr_size = %i \n',top,bot,curr_size)
@@ -56,3 +56,19 @@ while top-bot > 0
         bot = curr_size;
     end
 end
+fprintf('Last check for bot = %i\n',bot)
+tic
+for j = 1:n
+        new_set = randperm(82,curr_size);
+        A = A_82(new_set,:);
+        [is_resolving,X] = ILP_resolve(k,a,A);
+        if is_resolving
+            fprintf('Smallest size is %i\n',bot)
+            set = cell(curr_size,1);
+            for i = 1:curr_size
+                set{i} = str{new_set(i)};
+            end
+            break
+        end
+end  
+toc
