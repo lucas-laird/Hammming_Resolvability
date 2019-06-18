@@ -43,8 +43,9 @@ def readFiles(prefix=''):
   if len(glob.glob(prefix+'grobner_times_all.dict'))>0: data = mergeDicts(data, readDict(prefix+'grobner_times_all.dict'))
   if len(glob.glob(prefix+'alternate_brute_force_times_all.dict'))>0: data = mergeDicts(data, readDict(prefix+'alternate_brute_force_times_all.dict'))
   if len(glob.glob(prefix+'parallel_grobner_times_all.dict'))>0: data = mergeDicts(data, readDict(prefix+'parallel_grobner_times_all.dict'))
+  if len(glob.glob(prefix+'ILP_times_all.dict'))>0: data = mergeDicts(data, readDict(prefix+'ILP_times_all.dict'))
   if len(data)>0: return data
-  for f in [f for f in glob.glob(prefix+'brute_force_*.dict')+glob.glob(prefix+'grobner_*.dict')+glob.glob(prefix+'alternate_*.dict')+glob.glob(prefix+'parallel_grobner_*.dict') if 'all' not in f]:
+  for f in [f for f in glob.glob(prefix+'brute_force_*.dict')+glob.glob(prefix+'grobner_*.dict')+glob.glob(prefix+'alternate_*.dict')+glob.glob(prefix+'parallel_grobner_*.dict')+glob.glob(prefix+'ILP_*.dict') if '_all' not in f]:
     data = mergeDicts(data, readDict(f))
   return data
 
@@ -146,7 +147,7 @@ def checkResolvingHamming(R, k, alphabet):
 
 def combineFiles(prefix=''):
   data = {}
-  for f in [f for f in glob.glob(prefix+'brute_force_*.dict')+glob.glob(prefix+'grobner_*.dict')+glob.glob(prefix+'alternate_*.dict')+glob.glob(prefix+'parallel_grobner_*.dict') if '_all' not in f]:
+  for f in [f for f in glob.glob(prefix+'brute_force_*.dict')+glob.glob(prefix+'grobner_*.dict')+glob.glob(prefix+'alternate_*.dict')+glob.glob(prefix+'parallel_grobner_*.dict')+glob.glob(prefix+'ILP_*.dict') if '_all' not in f]:
     b = readDict(f)
     data = mergeDicts(data, b)
 
@@ -171,6 +172,7 @@ def combineFiles(prefix=''):
   if 2 in data: writeDict({2:data[2]}, prefix+'grobner_times_all.dict')
   if 3 in data: writeDict({3:data[3]}, prefix+'alternate_brute_force_times_all.dict')
   if 4 in data: writeDict({4:data[4]}, prefix+'parallel_grobner_times_all.dict')
+  if 5 in data: writeDict({5:data[5]}, prefix+'ILP_times_all.dict')
 
 def mergeDicts(x,y):
   for funcNum in y:
@@ -186,7 +188,7 @@ def mergeDicts(x,y):
 def dictTests(examples, repeats, maxSize=-1, prefix=''):
   data = readFiles(prefix=prefix)
 
-  funcNames = {1:'Brute Force', 2:'Grobner', 3:'Alternate Brute Force', 4:'Parallel Grobner'}
+  funcNames = {1:'Brute Force', 2:'Grobner', 3:'Alternate Brute Force', 4:'Parallel Grobner', 5:'ILP'}
   for funcNum in sorted(data.keys()):
     print(str(funcNum)+': '+funcNames[funcNum])
     for a in sorted(data[funcNum].keys()):
@@ -206,20 +208,21 @@ def dictTests(examples, repeats, maxSize=-1, prefix=''):
 #
 def makePlots(prefix='', maxSize=25):
   data = readFiles(prefix=prefix) #funcNum -> a -> k -> (R, isResolving, time)
-  for i in range(3): sizeVSTime(data[1], data[2], data[3], resType=i, prefix=prefix, maxSize=maxSize)
+  for i in range(3): sizeVSTime(data[1], data[2], data[3], data[5], resType=i, prefix=prefix, maxSize=maxSize)
   for i in range(3):
-    kVSTime(data[1], resType=i, title='Brute Force', prefix=prefix, maxSize=maxSize)
+#    kVSTime(data[1], resType=i, title='Brute Force', prefix=prefix, maxSize=maxSize)
     kVSTime(data[2], resType=i, title='Grobner Basis', prefix=prefix, maxSize=maxSize)
     kVSTime(data[3], resType=i, title='Alternate Brute Force', prefix=prefix, maxSize=maxSize)
+    kVSTime(data[5], resType=i, title='ILP', prefix=prefix, maxSize=maxSize)
 #  for i in range(3):
 #    timeHists(data[1], resType=i, title='Brute Force', prefix=prefix, maxSize=maxSize)
 #    timeHists(data[2], resType=i, title='Grobner Basis', prefix=prefix, maxSize=maxSize)
 #    timeHists(data[3], resType=i, title='Alternate Brute Force', prefix=prefix, maxSize=maxSize)
-  for i in range(3): timeHists(data[4], resType=i, title='Parallel Grobner', prefix=prefix, maxSize=maxSize)
+#  for i in range(3): timeHists(data[4], resType=i, title='Parallel Grobner', prefix=prefix, maxSize=maxSize)
   #size vs time for grobner and brute ... 3 plots: res, non res, all
   #k vs time, each a a different curve, grobner and brute, res, non res, all
 
-def sizeVSTime(brute, grobner, alt, resType=0, prefix='', maxSize=25): #0 res, 1 non res, 2 all
+def sizeVSTime(brute, grobner, alt, ilp, resType=0, prefix='', maxSize=25): #0 res, 1 non res, 2 all
   maxY = 0
   sizes = {}
   for a in brute:
@@ -236,7 +239,7 @@ def sizeVSTime(brute, grobner, alt, resType=0, prefix='', maxSize=25): #0 res, 1
   E = [np.std(sizes[s]) for s in X]
   (X,Y,E) = zip(*[(x,y,e) for (x,y,e) in zip(X,Y,E) if not np.isnan(y)])
   maxY = max(Y) #sum(max(zip(Y,E), key=lambda x: x[0]))
-  plt.errorbar(X, Y, yerr=E, label='brute', capsize=2, fmt='bo-')
+  #plt.errorbar(X, Y, yerr=E, label='brute', capsize=2, fmt='bo-')
 #  plt.plot(X, Y, 'bo-', label='brute', markersize=5)
 
   sizes = {}
@@ -273,6 +276,26 @@ def sizeVSTime(brute, grobner, alt, resType=0, prefix='', maxSize=25): #0 res, 1
   (X,Y,E) = zip(*[(x,y,e) for (x,y,e) in zip(X,Y,E) if not np.isnan(y)])
   maxY = maxY if maxY > max(Y) else max(Y) #maxY if maxY > sum(max(zip(Y,E), key=lambda x: x[0])) else sum(max(zip(Y,E), key=lambda x: x[0]))
   plt.errorbar(X, Y, yerr=E, label='alt', capsize=2, fmt='go-', markersize=5)
+#  plt.plot(X, Y, 'go-', label='alt', markersize=5)
+
+  sizes = {}
+  for a in ilp:
+    for k in ilp[a]:
+      a = int(a)
+      k = int(k)
+      s = int(np.power(a, k))
+      if a*k>maxSize: break
+      if s not in sizes: sizes[s] = []
+      for (R, res, t) in ilp[a][k]:
+        if resType==0 and res==True: sizes[s].append(t)
+        elif resType==1 and res==False: sizes[s].append(t)
+        elif resType==2: sizes[s].append(t)
+  X = sorted(sizes.keys())
+  Y = [np.mean(sizes[s]) for s in X]
+  E = [np.std(sizes[s]) for s in X]
+  (X,Y,E) = zip(*[(x,y,e) for (x,y,e) in zip(X,Y,E) if not np.isnan(y)])
+  maxY = maxY if maxY > max(Y) else max(Y) #maxY if maxY > sum(max(zip(Y,E), key=lambda x: x[0])) else sum(max(zip(Y,E), key=lambda x: x[0]))
+  plt.errorbar(X, Y, yerr=E, label='ilp', capsize=2, fmt='bo-', markersize=5)
 #  plt.plot(X, Y, 'go-', label='alt', markersize=5)
 
 #  plt.xlim([0, 7000])

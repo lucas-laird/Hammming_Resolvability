@@ -27,10 +27,11 @@ end
 A_82 = A;
 
 %% Generate a smaller resolving subset
-n = 2000;
+n = 500;
 sizes = zeros(1,n);
 sets = cell(1,n);
 for j = 1:n
+    fprintf('Starting set %i \n',j)
     tic
     is_resolving = false;
     shuffled_order = randperm(82);
